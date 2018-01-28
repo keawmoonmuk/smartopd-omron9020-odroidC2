@@ -42,4 +42,5 @@ def ConnectSerialPortInbody370(serialport):
 
     except:       
         print("---Can not conection to seriaport Bsm 370----")
-           
+        
+       

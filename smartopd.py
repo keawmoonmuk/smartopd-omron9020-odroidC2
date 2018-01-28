@@ -40,8 +40,11 @@ data_sys = ""
 data_dia = ""
 data_pr =""
 cid  =  ""
-firstname  =""    
-lastname =""
+firstname  =""      #th
+lastname =""        #th
+firstname_en  = ""  # en
+lastname_en  = ""   # en
+
 gender     = ""   
 age  = ""
 dateOfbrith = "" 
@@ -52,8 +55,8 @@ root = Tk()      # form
 def Client_Toserver():
 
     global cid
-    global firstname
-    global lastname
+    global firstname_en
+    global lastname_en
     global gender
     global age
     global dateOfbrith
@@ -71,8 +74,9 @@ def Client_Toserver():
         
     data_format = ("Id card = {0}- Firstname = {1} - Lastname = {2} - DateofBrith = {3} - Gender = {4} - Age = {5} - Data-sys = {6} - Data-Dia = {7} - Data-Pr = {8} ".format(cid,firstname,lastname,dateOfbrith,gender,age,data_sys,data_dia,data_pr))
     print("Data format = {0}".format(data_format))
-    if cid != "" and firstname != "" and lastname != "" and gender != "" and age != "" and dateOfbrith != "" and str(data_sys) != "" and str(data_dia) != "" and str(data_pr) !="" :
+    if cid != "" and firstname_en != "" and lastname != "" and gender != "" and age != "" and dateOfbrith != "" and str(data_sys) != "" and str(data_dia) != "" and str(data_pr) !="" :
         print("ถ้าไม่เท่ากับค่าว่าง ")
+
         while(True):
             
                 #-----check Smartcard insert...-----
@@ -128,8 +132,8 @@ def Client_Toserver():
 def SendToserver():
     
     global cid
-    global firstname
-    global lastname
+    global firstname_en
+    global lastname_en
     global gender
     global age
     global dateOfbrith
@@ -140,7 +144,7 @@ def SendToserver():
     global  data_height
     global  data_bmi 
 
-    rpi_token_number = '#smartopd-01'     #   ชื่อ Device
+    omron_token_number = '#smartopd-01'     #   ชื่อ Device
     
     while(True):
       
@@ -162,8 +166,8 @@ def SendToserver():
         #dt = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         dt = now.strftime("%Y-%m-%d %H:%M:%S") 
 
-        msg_data = "|{0}|{1}|{2}|{3}|{4}|{5}|{6}|{7}|{8}|{9}|{10}|{11}|{12}|".format(cid,dt,firstname,lastname,dateOfbrith,gender,age,data_sys,data_dia,data_pr,data_width,data_height,data_bmi)
-
+        msg_data = "|{0}|{1}|{2}|{3}|{4}|{5}|{6}|{7}|{8}|{9}|{10}|{11}|{12}|".format(cid,dt,firstname_en,lastname_en,dateOfbrith,gender,age,data_sys,data_dia,data_pr,data_width,data_height,data_bmi)
+        print(msg_data)
         byte_encode = msg_data.encode('utf-8')
       
         print("Sending To Server From Device 1 : ", msg_data )
@@ -172,7 +176,26 @@ def SendToserver():
         s.close()
         time.sleep(0.5)
 
-        return
+        while(True):
+
+            time.sleep(3)
+
+            for r in readers():
+                        
+                try:
+
+                    connection = r.createConnection()       
+                    connection.connect()
+                    # print(r,toHexString(connection.getATR()))
+
+                except NoCardException :
+                    
+                    print(r, 'no card inserted in function inbody 370')
+                    MainDefault(root)                     
+                    root.after(1000,SmartcartdataReader)   # 1 Secord to read bp 320
+                    root.mainloop()    
+
+       # return
 
 #------Insert image Bsm 370--------------------
 def Imgbsm370():
@@ -239,22 +262,6 @@ def SerialPort_Inbody370(serialport):
         print("---Can not conection to seriaport Bsm 370----")
           
 
-
-#-------------------fullscreen-----------------------------------
-# class FullScreenApp(object):
-#     def __init__(self, master, **kwargs):
-#         self.master=master
-#         pad=3
-#         self._geom='200x200+0+0'
-#         master.geometry("{0}x{1}+0+0".format(
-#             master.winfo_screenwidth()-pad, master.winfo_screenheight()-pad))
-#         master.bind('<Escape>',self.toggle_geom)            
-#     def toggle_geom(self,event):
-#         geom=self.master.winfo_geometry()
-#         print(geom,self._geom)
-#         self.master.geometry(self._geom)
-#         self._geom=geom
-
 #-------------------convert data to int...----------------------------
 def ConvertToInt(data):
 
@@ -279,31 +286,13 @@ def Savebuffer(buffer):
         bytebuffer.append(b)      
     return bytebuffer
 
-# def Msgbox():
-
-#     msgbox = tk.messagebox.askquestion('EXIT', 'You Want to exit app ? ', icon='error')
-#     if msgbox == 'yes':
-#         root.destroy()
-#     else:
-#         tk.messagebox.showinfo('Back to app...', 'Welcome to app...')
-
-# def onOpen():
-
-#     print(filedialog.askopenfilename(initialdir="/", title="Open file",
-#                                      filetypes=(("Python files", "*.py;*.pyw"), ("All files", "*.*"))))
-
-
-# def onSave():
-
-#     print(filedialog.asksaveasfilename(initialdir="/", title="Save as",
-#                                        filetypes=(("Python files", "*.py;*.pyw"), ("All files", "*.*"))))
 
 def SmartcartdataReader():
 
     #global varible          
     global cid                
-    global firstname      
-    global lastname          
+    global firstname_en      
+    global lastname_en          
     global gender        
     global age
     global dateOfbrith
@@ -317,8 +306,8 @@ def SmartcartdataReader():
     global data_pr
     print("-------loading for read data smartcard reader --------")
     print("-------cid   =" + cid)
-    print("--------firstname  = " + firstname)
-    print("---------lastname = "  + lastname)
+    print("--------firstname  = " + firstname_en)
+    print("---------lastname = "  + lastname_en)
     print("----------gender = " + gender)
     print("----------age  = " + age)
     print("----------dateOfbrith  ==" + dateOfbrith)
@@ -337,15 +326,13 @@ def SmartcartdataReader():
         print("------------if data in smartcard != null   on function smartcard reader---------")
         data_width = ""
         data_height = ""
-        data_bmi =""
-        
+        data_bmi =""      
         data_sys = ""
         data_dia =""
         data_pr =""
-      
         cid  =  ""          
-        firstname  =""    
-        lastname =""
+        firstname_en  =""    
+        lastname_en =""
         gender     = ""   
         age  = ""
         dateOfbrith = "" 
@@ -468,13 +455,14 @@ def SmartcartdataReader():
                 # -------Get TH Fullname-------นาย#เกรียงไกร#   
             data = getData(CMD_THFULLNAME, req)
             th_fullname = thaifullname(data[0])
+            print(th_fullname)
 
             prefix = th_fullname.split('.')[0]          # Mr, Ms, Mrs.
             firstname = th_fullname.split('#')[1]       #Firstname
             lastname = th_fullname.split('##')[1]       #Lastname
             print("-----------prefix----" + prefix)
             print("-----------firstname  = " + firstname)
-            print("-----------lastname   ==" + lastname)
+            print("-----------lastname   =" + lastname)
             
                 #------Get  EN Fullname------
             data = getData(CMD_ENFULLNAME, req)
@@ -523,19 +511,24 @@ def SmartcartdataReader():
             gender =  ""
             if data_gender  == '1':
                 
-                gender = "ชาย"
+                gender = "Male"
             else:
                 
-                gender = "หญิง"
+                gender = "Female"
 
             print("-----------set format gender =="   + gender)
                       
             if cid != "":
-                    
+                
+                mm_en = "|{0}|{1}|{2}|{3}|{4}|{5}|".format(cid,firstname_en,lastname_en,dateOfbrith,gender,age)
+                print(mm_en)
+                mm_th = "|{0}|{1}|{2}|{3}|{4}|{5}|".format(cid,firstname,lastname,dateOfbrith,gender,age)
+                print(mm_th)
+
                 print("--------------IF cid != null in function Smartcarddatareader----")        
                 print("--------------cid  = " + cid)
-                print("--------------firstname = " + firstname)
-                print("--------------lastname  " +lastname)
+                print("--------------firstname = " + firstname_en)
+                print("--------------lastname  " +lastname_en)
                 print("---------------gender  = " + gender)
                 print("---------------age = " + age)
                 print("---------------dateOfbroth  = "  + dateOfbrith)
@@ -571,8 +564,8 @@ def Getdatainbodybsm370():
     #global varible
     global serialportInbody370 
     global cid
-    global firstname
-    global lastname
+    global firstname_en
+    global lastname_en
     global gender
     global age
     global dateOfbrith
@@ -589,7 +582,7 @@ def Getdatainbodybsm370():
     print("---------data dia ==" + data_dia)
     print("----------data pr  =="  + data_pr)
     #print("---Read data for inbody 370...---")
-    print("---CID = {0} ,firstname = {1}, lastname = {2}, gender = {3}, age = {4}, dateOfbrith = {5}".format(cid,firstname,lastname,gender,age,dateOfbrith))
+    print("---CID = {0} ,firstname = {1}, lastname = {2}, gender = {3}, age = {4}, dateOfbrith = {5}".format(cid,firstname_en,lastname_en,gender,age,dateOfbrith))
    # print("---width = {0}, height = {1},bmi = {2}, sys = {3},dia = {4},pr = {5}".format(data_width,data_height,data_bmi,data_sys,data_dia,data_pr))
     print("-------Check Insert smart card in function GetdatInbody370----")
 
@@ -604,7 +597,7 @@ def Getdatainbodybsm370():
 
             print("------when Insert card for read data from inbody bsm 370--------")     
         
-            print("idcard="+cid + "- firstname = "+firstname+" - lastname = "+lastname+"- gender = "+gender+"- age ="+age+"- sys = "+str(data_sys)+" -dia = "+str(data_dia)+"- pr ="+str(data_pr)+"- widht = "+str(data_width)+"- height = "+str(data_height)+"- bmi ="+str(data_bmi))
+            print("idcard="+cid + "- firstname = "+firstname_en+" - lastname = "+lastname_en+"- gender = "+gender+"- age ="+age+"- sys = "+str(data_sys)+" -dia = "+str(data_dia)+"- pr ="+str(data_pr)+"- widht = "+str(data_width)+"- height = "+str(data_height)+"- bmi ="+str(data_bmi))
             
             ser1 = ConnectSerialPortInbody370(serialportInbody370)   # connect USB to Serialport On InbodyScala 370
         
@@ -646,15 +639,18 @@ def Getdatainbodybsm370():
                     # data height
                     h  = chr(buff[6]) + chr(buff[7]) + chr(buff[8]) + chr(buff[9])  # height
                     data_height  = ConvertToInt(h)
-                   
+                    print(data_height)
+
                     # data width
                     w  = chr(buff[11]) + chr(buff[12]) + chr(buff[13])  # width
                     data_width = ConvertToInt(w)
-                    
+
+                    print(data_width)
+
                     # data bmi
-                    bmi = chr(buff[15]) + chr(buff[16]) + chr(buff[17])   # bmi
-                    print("-----bmi----" + bmi)
+                    bmi = chr(buff[15]) + chr(buff[16]) + chr(buff[17])   # bmi                 
                     data_bmi = ConvertToInt(bmi)
+                    print(data_bmi)
                     #data_bmi = bmi
                     print("width :(" + str(data_width) + ") height :(" + str(data_height)+") bmi :("+str(data_bmi)+")")
 
@@ -667,7 +663,7 @@ def Getdatainbodybsm370():
                         #backgroud     
                         Bg()
                         #show main default                  
-                        MainSDP(root,cid,firstname,lastname,gender,age,dateOfbrith,data_sys,data_dia,data_pr, str(data_width), str(data_height), str(data_bmi))                            
+                        MainSDP(root,cid,firstname_en,lastname_en,gender,age,dateOfbrith,data_sys,data_dia,data_pr, str(data_width), str(data_height), str(data_bmi))                            
                         #sent to server
                         root.after(1000,SendToserver)
                         root.mainloop()
@@ -679,27 +675,9 @@ def Getdatainbodybsm370():
             MainDefault(root)                     
             root.after(1000,SmartcartdataReader)   # 1 Secord to read bp 320
             root.mainloop() 
-   
-                                                                                 
-# ---------------------------MenuBar-----------------------------------------------------------
-# def SettingForm():
-#     root = Tk()
-#     root.title("LOG DETAIL...")
-#     root.geometry("600x500")
-#     root.maxsize(800, 600)
-#     root.config(bg="LightBlue")  # color backgroud
-#     lbl_IDCARD = Label(root, text="HN   :", font=('Arial Bold"', 24), bg='#1E90FF')
-#     lbl_SYS = Label(root, text="SYS :", font=('Arial Bold', 24), bg='#1E90FF')
-#     lbl_DIA = Label(root, text="DIA  :", font=('Arial Bold', 24), bg='#1E90FF')
-#     lbl_PR = Label(root, text="PR    :", font=('Arial Bold', 24), bg='#1E90FF')
-
-#     lbl_IDCARD.grid(row=2, column=0, sticky=W, padx=40, pady=15)
-#     lbl_SYS.grid(row=3, column=0, sticky=W, padx=40, pady=15)
-#     lbl_DIA.grid(row=4, column=0, sticky=W, padx=40, pady=15)
-#     lbl_PR.grid(row=5, column=0, sticky=W, padx=40, pady=15)
 
 #-------------------------------- DATA SYS DIA PR-----------------------------------------
-def MainSDP(root,cid,firstname,lastname,gender,age,dateOfbrith,sys,dia,pr,width,height,bmi):
+def MainSDP(root,cid,firstname_en,lastname_en,gender,age,dateOfbrith,sys,dia,pr,width,height,bmi):
 
     print("---main sdp -----------")
     print(width)
@@ -707,11 +685,11 @@ def MainSDP(root,cid,firstname,lastname,gender,age,dateOfbrith,sys,dia,pr,width,
     print(bmi)
     #BP Secess...
     status1 = StringVar()
-    status1.set("SUECESS")
+    status1.set("Finished Measurement")
 
     #Scala Secess..
     status2 = StringVar()
-    status2.set("SUECESS")
+    status2.set("Finished Measurement")
        
     #time now
     now = datetime.today().strftime("%H:%M:%S")
@@ -724,9 +702,9 @@ def MainSDP(root,cid,firstname,lastname,gender,age,dateOfbrith,sys,dia,pr,width,
     p_idcard = StringVar()
     p_idcard.set(cid)
     p_firstname = StringVar()
-    p_firstname.set(firstname)
+    p_firstname.set(firstname_en)
     p_lastname = StringVar()
-    p_lastname.set(lastname)
+    p_lastname.set(lastname_en)
     p_gender = StringVar()
     p_gender.set(gender)
     p_age = StringVar()
@@ -749,46 +727,28 @@ def MainSDP(root,cid,firstname,lastname,gender,age,dateOfbrith,sys,dia,pr,width,
     d_bmi = StringVar()
     d_bmi.set(bmi)
 
-     
-    print("idcard="+cid + "- firstname = "+firstname+" - lastname = "+lastname+"- "+dateOfbrith+"- gender = "+gender+"- age ="+age+"- sys = "+str(sys)+" -dia = "+str(dia)+"- pr ="+str(pr))
-  
-    # data_subTointdia  = int(dia)
-    # data_subTostringdia = str(data_subTointdia)
-    
-    # data_subTointpr  = int(pr)
-    # data_subTostringpr = str(data_subTointpr)
-    
-    #print("data sub dia and pr = {0} and {1}".format(data_subTostringdia,data_subTostringpr))
-  
-   # set insert data for sys, dia,pr ,widht, height ,bmi
-    # data_sys = StringVar(root,value=sys)
-    # data_dia =StringVar(root,value=data_subTostringdia)
-    # data_pr = StringVar(root,value=data_subTostringpr)
-
-    # data_width = StringVar(root,value=width)
-    # data_height = StringVar(root,value=height)
-    # data_bmi = StringVar(root,value=bmi)
+    print("idcard="+cid + "- firstname = "+firstname_en+" - lastname = "+lastname_en+"- "+dateOfbrith+"- gender = "+gender+"- age ="+age+"- sys = "+str(sys)+" -dia = "+str(dia)+"- pr ="+str(pr))
 
 
     #*********************show data all*******************
-    lbl_header = Label(root,text="SMART OPD", font=('Arial Bold', 36,'bold'),bg='#1E90FF')
+    lbl_header = Label(root,text="SMART OPD", font=('Arial Bold', 36,'bold'),bg='#0071fe')
             
-    lbl_IDCARD = Label(root, text="ID CARD :", font=('Arial Bold', 24,'bold'),bg='#1E90FF')
-    lbl_BrithOfDate = Label(root, text="BRITH OF DATE :", font=('Arial Bold', 24,'bold'), bg='#1E90FF') 
-    lbl_Firstname = Label(root, text="NAME : ", font=('Arial Bold', 24,'bold'), bg='#1E90FF')
-    lbl_Lastname = Label(root, text="SURNAME :  ", font=('Arial  Bold', 24,'bold'), bg='#1E90FF')
-    lbl_Gender = Label(root, text="GENDER :", font=('Arial Bold', 24,'bold'), bg='#1E90FF')
-    lbl_Age = Label(root, text="AGE :", font=('Arial Bold', 24,'bold'), bg='#1E90FF')
-    lbl_SYS = Label(root, text="SYS :", font=('Arial Bold', 24,'bold'), bg='#1E90FF')      
-    lbl_DIA = Label(root, text="DIA :", font=('Arial Bold', 24,'bold'), bg='#1E90FF')    
-    lbl_PR = Label(root, text="PR  :", font=('Arial Bold', 24,'bold'), bg='#1E90FF')               
-    lbl_WEIGHT = Label(root, text="WIDTH : ", font=('Arial Bold', 24,'bold'), bg='#1E90FF')         
-    lbl_HEIGTH = Label(root, text="HEIGHT :", font=('Arial Bold', 24,'bold'), bg='#1E90FF')             
-    lbl_BMI = Label(root, text="BMI :", font=('Arial Bold', 24,'bold'), bg='#1E90FF')          
+    lbl_IDCARD = Label(root, text="ID CARD :", font=('Arial Bold', 24,'bold'),bg='#0071fe')
+    lbl_BrithOfDate = Label(root, text="BRITH OF DATE :", font=('Arial Bold', 24,'bold'), bg='#0071fe') 
+    lbl_Firstname = Label(root, text="NAME : ", font=('Arial Bold', 24,'bold'), bg='#0071fe')
+    lbl_Lastname = Label(root, text="SURNAME :  ", font=('Arial  Bold', 24,'bold'), bg='#0071fe')
+    lbl_Gender = Label(root, text="GENDER :", font=('Arial Bold', 24,'bold'), bg='#0071fe')
+    lbl_Age = Label(root, text="AGE :", font=('Arial Bold', 24,'bold'), bg='#0071fe')
+    lbl_SYS = Label(root, text="SYS :", font=('Arial Bold', 24,'bold'), bg='#0071fe')      
+    lbl_DIA = Label(root, text="DIA :", font=('Arial Bold', 24,'bold'), bg='#0071fe')    
+    lbl_PR = Label(root, text="PR  :", font=('Arial Bold', 24,'bold'), bg='#0071fe')               
+    lbl_WEIGHT = Label(root, text="WIDTH : ", font=('Arial Bold', 24,'bold'), bg='#0071fe')         
+    lbl_HEIGTH = Label(root, text="HEIGHT :", font=('Arial Bold', 24,'bold'), bg='#0071fe')             
+    lbl_BMI = Label(root, text="BMI :", font=('Arial Bold', 24,'bold'), bg='#0071fe')          
             
-    lbl_DATE = Label(root, text="DATE :", font=('Arial Bold', 24,'bold'), bg='#1E90FF')                  
-    lbl_TIME = Label(root, text="TIME :", font=('Arial Bold', 24,'bold'), bg='#1E90FF')                 
-    lbl_STATUS = Label(root, text="STATUS :", font=('Arial Bold', 24,'bold'), bg='#1E90FF')                   
+    lbl_DATE = Label(root, text="DATE :", font=('Arial Bold', 24,'bold'), bg='#0071fe')                  
+    lbl_TIME = Label(root, text="TIME :", font=('Arial Bold', 24,'bold'), bg='#0071fe')                 
+    lbl_STATUS = Label(root, text="STATUS :", font=('Arial Bold', 24,'bold'), bg='#0071fe')                   
 
     lbl_header.grid(row=1, column=0, sticky=W,  padx=20,pady=30)
 
@@ -853,18 +813,16 @@ def MainSDP(root,cid,firstname,lastname,gender,age,dateOfbrith,sys,dia,pr,width,
 
     print("End data form inbody 370 suecess...")
 
-    return
+    #return
     #*********************End show data all**************
-
-
 
 #-----------------------------Get form  Read data form comport -------------------------------
 def GetdataOmron9020():
    
     global serialportOmron9020
     global cid           
-    global firstname      
-    global lastname          
+    global firstname_en      
+    global lastname_en          
     global gender        
     global age
     global dateOfbrith
@@ -876,7 +834,7 @@ def GetdataOmron9020():
     global data_sys
     global data_dia
     global data_pr
-    print("--------Omron 9020 ==>  CID = {0} ,firstname = {1}, lastname = {2}, gender = {3}, age = {4}, dateOfbrith = {5}".format(cid,firstname,lastname,gender,age,dateOfbrith))
+    print("--------Omron 9020 ==>  CID = {0} ,firstname = {1}, lastname = {2}, gender = {3}, age = {4}, dateOfbrith = {5}".format(cid,firstname_en,lastname_en,gender,age,dateOfbrith))
     print("--------sys = {0},dia = {1},pr = {2}".format(data_sys,data_dia,data_pr))
 
     print("--------Check Insert smart card in function GetdatOmron 9020----")
@@ -895,7 +853,7 @@ def GetdataOmron9020():
 
             print(r, toHexString(connection.getATR()))
             print("--------------Smart card insert")
-            print("----idcard="+cid + "- firstname = "+firstname+" - lastname = "+lastname+"-"+dateOfbrith+"- gender = "+gender+"- age ="+age+"- sys = "+str(data_sys)+" -dia = "+str(data_dia)+"- pr ="+str(data_pr))
+            print("----idcard="+cid + "- firstname = "+firstname_en+" - lastname = "+lastname_en+"-"+dateOfbrith+"- gender = "+gender+"- age ="+age+"- sys = "+str(data_sys)+" -dia = "+str(data_dia)+"- pr ="+str(data_pr))
 
             ser = ConnectSerialportOmron9020(serialportOmron9020)  #coneect USB To SerialPort  Inbody 320
             print("----------connect serrial port Omron 9020----------")            
@@ -919,8 +877,8 @@ def GetdataOmron9020():
                         print ("----------data byte to read > 0 ------------")
                         buff = []
                     
-                        buff = Savebuffer(byteesToRead)
-
+                        #buff = Savebuffer(byteesToRead)
+                        buff = [98, 112, 45, 49, 50, 51, 52, 53, 54, 55, 56, 57, 49, 50, 51, 52, 53, 54, 55, 56, 57, 49, 48, 45, 50, 48, 49, 57, 47, 48, 54, 47, 49, 48, 45, 49, 49, 42, 51, 56, 45, 49, 49, 53, 45, 48, 55, 51, 45, 49, 49, 52, 45, 32, 57, 48, 45, 32]
                         print(buff)
                         
                         if len(byteesToRead) > 58:
@@ -929,7 +887,10 @@ def GetdataOmron9020():
                             data_sys = chr(buff[41]) + chr(buff[42]) + chr(buff[43])  # SYS
                             data_dia = chr(buff[49]) + chr(buff[50]) + chr(buff[51])  # DIA
                             data_pr = chr(buff[53]) + chr(buff[54]) + chr(buff[55])   # PR
-                            # totla length = 58
+                            
+                            print("sys" +data_sys+"sys")
+                            print("dia" +data_dia+"dia")
+                            print("pr" +data_pr+"pr")
 
                             print("----------data sys = {0} ,data dia = {1}, data pr = {2}------".format(data_sys,data_dia,data_pr))
 
@@ -938,6 +899,9 @@ def GetdataOmron9020():
                                 print("-----------if data sys and data dia and data pr != Null  ")
                                 print("----------When Read data Suecess ...In function GetdataOmron9020")
                                 
+                                msbox = "|{0}|{1}|{2}|{3}|{4}|{5}|{6}|{7}|{8}|{9}|{10}|{11}|".format(cid,firstname_en,lastname_en,dateOfbrith,gender,age,data_sys,data_dia,data_pr,data_width,data_height,data_bmi)
+                                print(msbox)
+
                                 root.after(5000,Imgbsm370)        # use 4 secord to read measument read scalar inbdoy370
                                 #root.after(3000,Client_Toserver) 
                                 ser.close()
