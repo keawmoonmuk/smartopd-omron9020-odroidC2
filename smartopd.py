@@ -29,10 +29,10 @@ from tkinter import messagebox
 from InterfaceSerial.InterfaceSerailport import ConnectSerialportOmron9020 , ConnectSerialPortInbody370
 
 #Global
-serialportOmron9020 = '/dev/ttyUSB0'    # Measuament 1  Inbody  9020
-serialportInbody370 = '/dev/ttyUSB1'  # Measuaemt 2 BP Inbody Scala 370
+serialportOmron9020 = '/dev/ttyUSB0'    # Measuament 1  omron  9020
+serialportInbody370 = '/dev/ttyUSB1'   # Measuaemt 2 BP Inbody Scala 370
 
-#------Create varible global  for sys ,dia ,pr , widht,height, bmi
+#------Create varible global 
 data_width = ""
 data_height = ""
 data_bmi =""
@@ -127,13 +127,16 @@ def Client_Toserver():
                                
     return
 
-
 #-------------client to servert is pc--------------------
 def SendToserver():
     
     global cid
     global firstname_en
     global lastname_en
+
+    global firstname        #th
+    global lastname         #th
+
     global gender
     global age
     global dateOfbrith
@@ -144,32 +147,55 @@ def SendToserver():
     global  data_height
     global  data_bmi 
 
-    omron_token_number = '#smartopd-01'     #   ชื่อ Device
+    device2 = 'device-2'     #   ชื่อ Device
     
+    print("firstname ={0}, lastname = {1}".format(firstname,lastname))
+
     while(True):
       
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        host = '192.168.137.1'              #ip server
+        #ipaddress = ''
+        #ipaddress = ReadIPserver()
+        host = '192.168.100.29'
         port = 12345                        #port to connect
-       
+
         try:
              
                 s.connect((host, port))
                 
-                print(s.recv(4096))         # message from server  
+                #print(s.recv(4096))         # message from server  
 
         except socket.error as ex_msg:
-               
-                print(ex_msg)
+             
+            print(ex_msg)
+
+            while(True):
+
+                time.sleep(3)
+
+                for r in readers():
+                            
+                    try:
+
+                        connection = r.createConnection()       
+                        connection.connect()
+                        
+                    #except NoCardException :
+                    except :
+
+                        print(r, 'no card inserted in function inbody 370')
+                        MainDefault(root)                     
+                        root.after(1000,SmartcartdataReader)   # 1 Secord to read bp 320
+                        root.mainloop()  
 
         now = datetime.now()
         #dt = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         dt = now.strftime("%Y-%m-%d %H:%M:%S") 
 
-        msg_data = "|{0}|{1}|{2}|{3}|{4}|{5}|{6}|{7}|{8}|{9}|{10}|{11}|{12}|".format(cid,dt,firstname_en,lastname_en,dateOfbrith,gender,age,data_sys,data_dia,data_pr,data_width,data_height,data_bmi)
+        msg_data = "|{0}|{1}|{2}|{3}|{4}|{5}|{6}|{7}|{8}|{9}|{10}|{11}|{12}|{13}".format(device2,cid,dt,firstname_en,lastname_en,dateOfbrith,gender,age,data_sys,data_dia,data_pr,data_width,data_height,data_bmi)
         print(msg_data)
         byte_encode = msg_data.encode('utf-8')
-      
+            
         print("Sending To Server From Device 1 : ", msg_data )
 
         s.send(byte_encode)             # message to server       
@@ -178,7 +204,7 @@ def SendToserver():
 
         while(True):
 
-            time.sleep(3)
+            time.sleep(2)
 
             for r in readers():
                         
@@ -188,7 +214,8 @@ def SendToserver():
                     connection.connect()
                     # print(r,toHexString(connection.getATR()))
 
-                except NoCardException :
+                #except NoCardException :
+                except :                  
                     
                     print(r, 'no card inserted in function inbody 370')
                     MainDefault(root)                     
@@ -209,19 +236,9 @@ def Imgbsm370():
     img.image = render  
     img.place(x=0, y= 0)
     print("-----------loading for read data for device Inbody 370----")
-    root.after(3000,Getdatainbodybsm370)  # use 4 secord to read measument read scalar inbdoy370             
-    root.mainloop()  
+    root.after(3000,Getdatainbodybsm370)  # use 4 secord to read measument read scalar inbdoy370    
 
-# def Insertsmartcard(root):
- 
-#     width=1500
-#     height=1000 
-#     load = PilImage.open("/home/odroid/SmartOpd/img/insertsmartcard.jpg")
-#     load = load.resize((width,height))
-#     render = ImageTk.PhotoImage(load)
-#     img = Label(image=render)
-#     img.image = render  
-#     img.place(x=0, y= 0)
+    root.mainloop()  
 
 #----------interface module-------------
 def SerialPort_Inbody320(serialport):
@@ -261,7 +278,6 @@ def SerialPort_Inbody370(serialport):
          
         print("---Can not conection to seriaport Bsm 370----")
           
-
 #-------------------convert data to int...----------------------------
 def ConvertToInt(data):
 
@@ -286,13 +302,16 @@ def Savebuffer(buffer):
         bytebuffer.append(b)      
     return bytebuffer
 
-
 def SmartcartdataReader():
 
     #global varible          
     global cid                
     global firstname_en      
     global lastname_en          
+
+    global firstname        #th
+    global lastname         #th 
+
     global gender        
     global age
     global dateOfbrith
@@ -319,7 +338,6 @@ def SmartcartdataReader():
     print("----------data sys = " + data_sys)
     print("-----------data dia  = " + data_dia)
     print("----------- data pr" + data_pr)
-    
     
     if cid != "":
 
@@ -408,168 +426,151 @@ def SmartcartdataReader():
         CMD_GENDER = [0x80, 0xb0, 0x00, 0xE1, 0x02, 0x00, 0x01]
         print("------------cmd gender = {0}".format(CMD_GENDER))
         
-        #read smart card
-        readerList = readers()
-        print("------show log reader List" )
-        print(readerList)
-        print ("------Available readers:")
-        for readerIndex,readerItem in enumerate(readerList):
-            print(readerIndex, readerItem)
-
-        readerSelectIndex = 0
-        reader = readerList[readerSelectIndex]
-        print ("----------Using:", reader)
-        #Create connection
-        connection = reader.createConnection()
-        print(connection)
+        for r in readers():                 
       
-        try:
-              #if insert smart card    
-            connection.connect()
-            
-            print('-------------smart card connect suecess......  ')
+            try:
 
-            atr = connection.getATR()
-            print("----------data atr-----")
-            print(atr)
-            print ("-----------ATR: {0}".format(toHexString(atr)))
-            if (atr[0] == 0x3B & atr[1] == 0x67):
-                req = [0x00, 0xc0, 0x00, 0x01]
-                print(req)
-            else :
-                req = [0x00, 0xc0, 0x00, 0x00]
-                print(req)
+                connection = r.createConnection()       
+                connection.connect()
+                # print(r,toHexString(connection.getATR()))
+                
+                print('-------------smart card connect suecess......  ')
 
-            # Check card
-            data, sw1, sw2 = connection.transmit(SELECT + THAI_CARD)
-            print ("---------Select Applet: %02X %02X" % (sw1, sw2))
+                atr = connection.getATR()
+                print("----------data atr-----")
+                print(atr)
+                print ("-----------ATR: {0}".format(toHexString(atr)))
+                if (atr[0] == 0x3B & atr[1] == 0x67):
+                    req = [0x00, 0xc0, 0x00, 0x01]
+                    print(req)
+                else :
+                    req = [0x00, 0xc0, 0x00, 0x00]
+                    print(req)
+
+                # Check card
+                data, sw1, sw2 = connection.transmit(SELECT + THAI_CARD)
+                print ("---------Select Applet: %02X %02X" % (sw1, sw2))
 
                 # -----Get ID CARD----
-            data = getData(CMD_CID, req)        #get data
-            cid = thai2unicode(data[0])         # thaiUnicode
+                data = getData(CMD_CID, req)        #get data
+                cid = thai2unicode(data[0])         # thaiUnicode
 
-            print("--------data check card  = ")
-            print(data)
-            print ("---------CID-----------: " + cid)
+                print("--------data check card  = ")
+                print(data)
+                print ("---------CID-----------: " + cid)
 
                 # -------Get TH Fullname-------นาย#เกรียงไกร#   
-            data = getData(CMD_THFULLNAME, req)
-            th_fullname = thaifullname(data[0])
-            print(th_fullname)
+                data = getData(CMD_THFULLNAME, req)
+                th_fullname = thaifullname(data[0])
+                print(th_fullname)
 
-            prefix = th_fullname.split('.')[0]          # Mr, Ms, Mrs.
-            firstname = th_fullname.split('#')[1]       #Firstname
-            lastname = th_fullname.split('##')[1]       #Lastname
-            print("-----------prefix----" + prefix)
-            print("-----------firstname  = " + firstname)
-            print("-----------lastname   =" + lastname)
-            
+                prefix = th_fullname.split('#')[0]          # Mr, Ms, Mrs.
+                firstname = th_fullname.split('#')[1]       #Firstname
+                lastname_strip = th_fullname.split('##')[1]       #Lastname
+                lastname = lastname_strip.strip()    
+
+                print("-----------prefix----" + prefix)
+                print("-----------firstname  = " + firstname)
+                print("-----------lastname   =" + lastname)
+                print(len(lastname))
                 #------Get  EN Fullname------
-            data = getData(CMD_ENFULLNAME, req)
-            en_fullname = thai2unicode(data[0])
-            print ("-------------EN Fullname : {0}".format(en_fullname))
-                
-            prefix_en = en_fullname.split('.')[0]          # Mr, Ms, Mrs.
-            firstname_en = en_fullname.split('#')[1]       #Firstname
-            lastname_en = en_fullname.split('##')[1]       #Lastname
-            print("----------prefix english  = "  + prefix_en)
-            print("----------firstname english ="  + firstname_en)
-            print("----------lastname = " + lastname_en)
-        
+                data = getData(CMD_ENFULLNAME, req)
+                en_fullname = thai2unicode(data[0])
+                print ("-------------EN Fullname : {0}".format(en_fullname))
+                    
+                prefix_en = en_fullname.split('.')[0]          # Mr, Ms, Mrs.
+                firstname_en = en_fullname.split('#')[1]       #Firstname
+                lastname_en = en_fullname.split('##')[1]       #Lastname
+                print("----------prefix english  = "  + prefix_en)
+                print("----------firstname english ="  + firstname_en)
+                print("----------lastname = " + lastname_en)
+            
                 #----Get Date of brith-----
-            data = getData(CMD_BIRTH, req)
-            data_dateOfdate = thai2unicode(data[0])     
-            print("----------dateOfbrith   =="  + data_dateOfdate)
-                
-            day = data_dateOfdate[6:8]            # Ex = 15
-            month = data_dateOfdate[4:6]             # Ex = 02  
-            date_year = data_dateOfdate[0:4]      # Ex = 2563
-            print("--------day   == " + day)
-            print("--------month    ="   + month)
-            print("--------year   ="   + date_year)
-                
+                data = getData(CMD_BIRTH, req)
+                data_dateOfdate = thai2unicode(data[0])     
+                print("----------dateOfbrith   =="  + data_dateOfdate)
+                    
+                day = data_dateOfdate[6:8]            # Ex = 15
+                month = data_dateOfdate[4:6]             # Ex = 02  
+                date_year = data_dateOfdate[0:4]      # Ex = 2563
+                print("--------day   == " + day)
+                print("--------month    ="   + month)
+                print("--------year   ="   + date_year)
+                    
                 #---Get format  dateOfbrith -----
-            dateOfbrith = '{0}-{1}-{2}'.format(day,month,date_year)
-            print("----------date Of brith set format  ==" + dateOfbrith)
-                
+                dateOfbrith = '{0}-{1}-{2}'.format(day,month,date_year)
+                print("----------date Of brith set format  ==" + dateOfbrith)
+                    
                 #------Get calculate AGE-----
-            age_year_convertInt = int(date_year)
-            age_day = int(day)    # 15
-            age_month = int(month)        # 02
-            age_year = age_year_convertInt -543   #  1989
-                
-            age_calculateYaer = calculateAge(date(age_year,age_month,age_day))
-            age = str(age_calculateYaer)
-            print("------------age current  ={0}".format(age))
-                
+                age_year_convertInt = int(date_year)
+                age_day = int(day)    # 15
+                age_month = int(month)        # 02
+                age_year = age_year_convertInt -543   #  1989
+                    
+                age_calculateYaer = calculateAge(date(age_year,age_month,age_day))
+                age = str(age_calculateYaer)
+                print("------------age current  ={0}".format(age))
+                    
                 #-----Get Gender-----
                 #-----For detail (1 = mele, 2= female)
-            data = getData(CMD_GENDER, req)
-            data_gender = thai2unicode(data[0])
-            print ("-----------Gender: {0}".format(data_gender))
+                data = getData(CMD_GENDER, req)
+                data_gender = thai2unicode(data[0])
+                print ("-----------Gender: {0}".format(data_gender))
 
-            gender =  ""
-            if data_gender  == '1':
-                
-                gender = "Male"
-            else:
-                
-                gender = "Female"
-
-            print("-----------set format gender =="   + gender)
-                      
-            if cid != "":
-                
-                mm_en = "|{0}|{1}|{2}|{3}|{4}|{5}|".format(cid,firstname_en,lastname_en,dateOfbrith,gender,age)
-                print(mm_en)
-                mm_th = "|{0}|{1}|{2}|{3}|{4}|{5}|".format(cid,firstname,lastname,dateOfbrith,gender,age)
-                print(mm_th)
-
-                print("--------------IF cid != null in function Smartcarddatareader----")        
-                print("--------------cid  = " + cid)
-                print("--------------firstname = " + firstname_en)
-                print("--------------lastname  " +lastname_en)
-                print("---------------gender  = " + gender)
-                print("---------------age = " + age)
-                print("---------------dateOfbroth  = "  + dateOfbrith)
-                
-                # print(data_width)
-                # print(data_height)
-                # print(data_bmi)
-                 
-                print("---------------data sys =  " + data_sys)
-                print("---------------data dia   ="  + data_dia)              
-                print("---------------data pr   = " + data_pr)
+                gender =  ""
+                if data_gender  == '1':
                     
-                #show img bp 9020
-                Getsmartcard(root)  
-                print("----------------show iamge Omron 9020...") 
-                #Use Time  1 Secord to read bp 320 
-                root.after(1000,GetdataOmron9020)      
-                root.mainloop()       
-                              
-        except NoCardException :
-            
-            print('--------no card inserted on function smartcardreader-----')
-            MainDefault(root)                     
-            root.after(1000,SmartcartdataReader)   # 1 Secord to read bp 320
-            root.mainloop()
-              
-    return cid
+                    gender = "Male"
+                else:
+                    
+                    gender = "Female"
+
+                print("-----------set format gender =="   + gender)
+                        
+                if cid != "":
+      
+                    print("--------------IF cid != null in function Smartcarddatareader----")        
+                    print("--------------cid  = " + cid)
+                    print("--------------firstname = " + firstname_en)
+                    print("--------------lastname  " +lastname_en)
+                    print("---------------gender  = " + gender)
+                    print("---------------age = " + age)
+                    print("---------------dateOfbroth  = "  + dateOfbrith)
+                    print("---------------data sys =  " + data_sys)
+                    print("---------------data dia   ="  + data_dia)              
+                    print("---------------data pr   = " + data_pr)
+    
+                    Getsmartcard(root)  
+                    print("----------------show iamge Omron 9020...") 
+
+                    root.after(1000,GetdataOmron9020)   
+
+                    root.mainloop()  
+                          
+            #except NoCardException :
+            except:
+                
+                print('--------no card inserted on function smartcardreader-----')
+                MainDefault(root)                     
+                root.after(1000,SmartcartdataReader)   # 1 Secord to read bp 320
+                root.mainloop()
+
+#handle_data 
+def handle_data(data):
+    print(data)
 
 #-----------------------------------Read data for inbody 370--------------------------------
 def Getdatainbodybsm370():
     
-    #print("----------------Read data inbody bsm 370-----")
-    #global varible
     global serialportInbody370 
     global cid
     global firstname_en
     global lastname_en
+    global firstname        #th
+    global lastname         #th
     global gender
     global age
     global dateOfbrith
-    
     global data_width 
     global data_height
     global data_bmi
@@ -578,6 +579,7 @@ def Getdatainbodybsm370():
     global data_dia
     global data_pr
 
+    print("firstname ={0}, lastname = {1}".format(firstname,lastname))
     print("---------data sys  =="  + data_sys)
     print("---------data dia ==" + data_dia)
     print("----------data pr  =="  + data_pr)
@@ -609,29 +611,23 @@ def Getdatainbodybsm370():
                      
             while True:
                 
-                time.sleep(7)        
-                byteesToRead   =  b'\x02h\x19\nZK1806\x1b744\x1b227\x1b\x14\x03'         # data virtual
-                #time.sleep(7)
-                #byteesToRead = ser1.read(ser1.inWaiting()) 
-                print("------loadding read data for inbody 370")
-              
+                time.sleep(3)   
+                #byteesToRead   =  b'\x02h\x19\nZK1806\x1b744\x1b227\x1b\x14\x03'         # data virtual           
+
+                byteesToRead = ser1.read(ser1.inWaiting()) 
+                print("------loadding read data for inbody 370")        
                 print(list(byteesToRead)) 
                 print(str(byteesToRead))
-              #  print("--------byte to read = {0}".format(byteesToRead))
-            
-                #bb = Checksum(byteesToRead)         
-                #print(bb)
-                
-                #Read data when data > 0
+              #  print("--------byte to read = {0}".format(byteesToRead))          
+           
+                #*****Read data when data > 0   **********
                 if len(byteesToRead) > 0:
                     print("---------if data > 0   inbody 370---------")
                     print("----read data suecess = {0}".format(byteesToRead))
-                    
-                # logging.info("RECEIVE DATA FROM DEVICE")
-
-                    buff = []                                       #varible buffer
+                                 
+                    buff = []                                      
                 
-                    buff = Savebuffer(byteesToRead)                 #Read buffer from bytearray to hex
+                    buff = Savebuffer(byteesToRead)             
                     
                     print("-------Read buffer = {0}".format(buff))
 
@@ -639,17 +635,20 @@ def Getdatainbodybsm370():
                     # data height
                     h  = chr(buff[6]) + chr(buff[7]) + chr(buff[8]) + chr(buff[9])  # height
                     data_height  = ConvertToInt(h)
+                    print(h)
                     print(data_height)
 
                     # data width
                     w  = chr(buff[11]) + chr(buff[12]) + chr(buff[13])  # width
+                    #w  = "1015"
                     data_width = ConvertToInt(w)
-
+                    print(w)
                     print(data_width)
 
                     # data bmi
                     bmi = chr(buff[15]) + chr(buff[16]) + chr(buff[17])   # bmi                 
                     data_bmi = ConvertToInt(bmi)
+                    print(bmi)
                     print(data_bmi)
                     #data_bmi = bmi
                     print("width :(" + str(data_width) + ") height :(" + str(data_height)+") bmi :("+str(data_bmi)+")")
@@ -666,11 +665,35 @@ def Getdatainbodybsm370():
                         MainSDP(root,cid,firstname_en,lastname_en,gender,age,dateOfbrith,data_sys,data_dia,data_pr, str(data_width), str(data_height), str(data_bmi))                            
                         #sent to server
                         root.after(1000,SendToserver)
+                        ser1.close()
                         root.mainloop()
 
+                #for data == 0 
+                
+                else :                   
+                
+                    for r in readers():
+
+                                                                                                   
+                        try :
+                            connection = r.createConnection()
+                            connection.connect()
+                            print(r, toHexString(connection.getATR()))
                                 
-        except NoCardException :
-            
+                            #Getsmartcard(root)
+                            root.after(1000,Getdatainbodybsm370)    
+
+                            root.mainloop() 
+                                
+                        except :
+                                
+                            print(r, '---------when pull card exit on function omron 9020----')
+                            MainDefault(root)                     
+                            root.after(1000,SmartcartdataReader)   # 1 Secord to read bp 320
+                            root.mainloop()
+                           
+        #except NoCardException :
+        except :   
             print(r, 'no card inserted in function inbody 370')
             MainDefault(root)                     
             root.after(1000,SmartcartdataReader)   # 1 Secord to read bp 320
@@ -729,7 +752,6 @@ def MainSDP(root,cid,firstname_en,lastname_en,gender,age,dateOfbrith,sys,dia,pr,
 
     print("idcard="+cid + "- firstname = "+firstname_en+" - lastname = "+lastname_en+"- "+dateOfbrith+"- gender = "+gender+"- age ="+age+"- sys = "+str(sys)+" -dia = "+str(dia)+"- pr ="+str(pr))
 
-
     #*********************show data all*******************
     lbl_header = Label(root,text="SMART OPD", font=('Arial Bold', 36,'bold'),bg='#0071fe')
             
@@ -771,8 +793,7 @@ def MainSDP(root,cid,firstname_en,lastname_en,gender,age,dateOfbrith,sys,dia,pr,
     lbl_TIME.grid(row=9, column=2, sticky=W, padx=20, pady=10)
             
     lbl_STATUS.grid(row=10, column=0, sticky=W, padx=20, pady=10)
-
-            # ----------------create textbox-------------------------------------
+    # ----------------create textbox-------------------------------------
     txt_IDCARD = Entry(root,textvar=p_idcard,width=13, font=("Arial Bold", 26)) 
     txt_BrithOfDate = Entry(root,textvar=p_dateofbrith,width=13, font=("Arial Bold", 26))  
     txt_FIRSTNAME = Entry(root,textvar=p_firstname,width=13, font=("Arial Bold", 26))
@@ -822,36 +843,35 @@ def GetdataOmron9020():
     global serialportOmron9020
     global cid           
     global firstname_en      
-    global lastname_en          
+    global lastname_en  
+    global firstname        #th
+    global lastname         #th
     global gender        
     global age
-    global dateOfbrith
-    
+    global dateOfbrith  
     # global data_width 
    #  global data_height
     # global data_bmi
-    
     global data_sys
     global data_dia
     global data_pr
+
+    print("firstname ={0}, lastname = {1}".format(firstname,lastname))
+    print("firstname ={0}, lastname = {1}".format(firstname_en,lastname_en))
     print("--------Omron 9020 ==>  CID = {0} ,firstname = {1}, lastname = {2}, gender = {3}, age = {4}, dateOfbrith = {5}".format(cid,firstname_en,lastname_en,gender,age,dateOfbrith))
     print("--------sys = {0},dia = {1},pr = {2}".format(data_sys,data_dia,data_pr))
-
     print("--------Check Insert smart card in function GetdatOmron 9020----")
-    #Check insert smart card reader
-    print("----------function omron 9020 check smartcard loop for--")
 
     for r in readers():
                                                          
         try :
 
             print("-------Read data smart card and read data bp9020--------")
-            print("-------when insert smart card in function GetOmron9020-----------")
-            
+            print("-------when insert smart card in function GetOmron9020-----------")          
             connection = r.createConnection()
             connection.connect()
-
             print(r, toHexString(connection.getATR()))
+
             print("--------------Smart card insert")
             print("----idcard="+cid + "- firstname = "+firstname_en+" - lastname = "+lastname_en+"-"+dateOfbrith+"- gender = "+gender+"- age ="+age+"- sys = "+str(data_sys)+" -dia = "+str(data_dia)+"- pr ="+str(data_pr))
 
@@ -866,8 +886,10 @@ def GetdataOmron9020():
             
             while True :
                     time.sleep(6)
-                    byteesToRead = b'\x02h\x19\nZK1806\x1b744\x1b227\x1b\x14\x03\x02h\x19\nZK1806\x1b744\x1b227\x1b\x14\x03\x19\nZK1806\x1b744\x1b227\x1b\x14\x03'
-                    #byteesToRead = ser.read(ser.inWaiting()) 
+                    
+                    #byteesToRead = b'\x02h\x19\nZK1806\x1b744\x1b227\x1b\x14\x03\x02h\x19\nZK1806\x1b744\x1b227\x1b\x14\x03\x19\nZK1806\x1b744\x1b227\x1b\x14\x03'
+                    
+                    byteesToRead = ser.read(ser.inWaiting()) 
                     print(byteesToRead)
                     print(str(byteesToRead))
                     
@@ -877,8 +899,8 @@ def GetdataOmron9020():
                         print ("----------data byte to read > 0 ------------")
                         buff = []
                     
-                        #buff = Savebuffer(byteesToRead)
-                        buff = [98, 112, 45, 49, 50, 51, 52, 53, 54, 55, 56, 57, 49, 50, 51, 52, 53, 54, 55, 56, 57, 49, 48, 45, 50, 48, 49, 57, 47, 48, 54, 47, 49, 48, 45, 49, 49, 42, 51, 56, 45, 49, 49, 53, 45, 48, 55, 51, 45, 49, 49, 52, 45, 32, 57, 48, 45, 32]
+                        buff = Savebuffer(byteesToRead)
+                        #buff = [98, 112, 45, 49, 50, 51, 52, 53, 54, 55, 56, 57, 49, 50, 51, 52, 53, 54, 55, 56, 57, 49, 48, 45, 50, 48, 49, 57, 47, 48, 54, 47, 49, 48, 45, 49, 49, 42, 51, 56, 45, 49, 49, 53, 45, 48, 55, 51, 45, 49, 49, 52, 45, 32, 57, 48, 45, 32]
                         print(buff)
                         
                         if len(byteesToRead) > 58:
@@ -886,8 +908,13 @@ def GetdataOmron9020():
                             print("---------if byteetoRead > 58 ---------------------------------------------")
                             data_sys = chr(buff[41]) + chr(buff[42]) + chr(buff[43])  # SYS
                             data_dia = chr(buff[49]) + chr(buff[50]) + chr(buff[51])  # DIA
-                            data_pr = chr(buff[53]) + chr(buff[54]) + chr(buff[55])   # PR
-                            
+                            data_pr_strip = chr(buff[53]) + chr(buff[54]) + chr(buff[55])   # PR
+                          
+                            data_pr = data_pr_strip.strip()
+                            print(len(data_sys))
+                            print(len(data_dia))
+                            print(len(data_pr))
+
                             print("sys" +data_sys+"sys")
                             print("dia" +data_dia+"dia")
                             print("pr" +data_pr+"pr")
@@ -899,11 +926,11 @@ def GetdataOmron9020():
                                 print("-----------if data sys and data dia and data pr != Null  ")
                                 print("----------When Read data Suecess ...In function GetdataOmron9020")
                                 
-                                msbox = "|{0}|{1}|{2}|{3}|{4}|{5}|{6}|{7}|{8}|{9}|{10}|{11}|".format(cid,firstname_en,lastname_en,dateOfbrith,gender,age,data_sys,data_dia,data_pr,data_width,data_height,data_bmi)
-                                print(msbox)
+                                # msbox = "|{0}|{1}|{2}|{3}|{4}|{5}|{6}|{7}|{8}|{9}|{10}|{11}|".format(cid,firstname,lastname,dateOfbrith,gender,age,data_sys,data_dia,data_pr,data_width,data_height,data_bmi)
+                                # print(msbox)
 
                                 root.after(5000,Imgbsm370)        # use 4 secord to read measument read scalar inbdoy370
-                                #root.after(3000,Client_Toserver) 
+                                
                                 ser.close()
                                 root.mainloop()            
                             
@@ -925,18 +952,17 @@ def GetdataOmron9020():
                             except :
                                 
                                 print(r, '---------when pull card exit on function omron 9020----')
-                                #MainDefault(root)                     
+                                MainDefault(root)                     
                                 root.after(1000,SmartcartdataReader)   # 1 Secord to read bp 320
                                 root.mainloop()
                         
-        except NoCardException  :
-
+        #except NoCardException  :
+        except  :
             print(r, '---------------no card inserted  on read data omron 9020---------------')
-            #MainDefault(root)                     
+            MainDefault(root)                     
             root.after(1000,SmartcartdataReader)   # 1 Secord to read bp 320
             root.mainloop()
-            
-         
+                   
 def Bg():
       
     print("--------show image background-------")
@@ -949,7 +975,6 @@ def Bg():
     img = Label(image=render)
     img.image = render  
     img.place(x=0, y= 0)
-
 
 #--------------------Form Default wait recive data------------------------------------
 
@@ -987,7 +1012,6 @@ def Getsmartcard(root):
     img = Label(image=render)
     img.image = render  
     img.place(x=0, y= 0)
-
 
 def MainSDP1():
     
@@ -1031,8 +1055,7 @@ def MainSDP1():
     lbl_TIME.grid(row=9, column=2, sticky=W, padx=20, pady=10)
             
     lbl_STATUS.grid(row=10, column=0, sticky=W, padx=20, pady=10)
-
-            # ----------------create textbox-------------------------------------
+    # ----------------create textbox-------------------------------------
     txt_IDCARD = Entry(root,width=13, font=("Arial Bold", 26)) 
     txt_BrithOfDate = Entry(root,width=13, font=("Arial Bold", 26))  
     txt_FIRSTNAME = Entry(root,width=13, font=("Arial Bold", 26))
@@ -1052,8 +1075,7 @@ def MainSDP1():
     txt_TIME = Entry(root,width=13,  font=("Arial Bold", 26))
 
     lbltxt_STATUS = Label(root, font=('Arial Bold', 26), bg='green')      # Status
-
-            #------------------------manage grid textbox----------------------------
+    #------------------------manage grid textbox----------------------------
     txt_IDCARD.grid(row=3, column=1,sticky=W, padx=0, pady=10)
     txt_FIRSTNAME.grid(row=4, column=1,sticky=W, padx=0, pady=10)
     txt_LASTNAME.grid(row=5, column=1,sticky=W, padx=0, pady=10)
@@ -1076,7 +1098,15 @@ def MainSDP1():
 
     return
 
-             
+def ReadIPserver():
+    #Readfile  =  ""
+    Path_open = open("hostserver.ini",'r')
+    Readfile = Path_open.read()
+    Path_open.close()
+    print(Readfile)
+    print(type(Readfile))
+    return Readfile
+    
 if __name__ == "__main__":
 
     root.title("SMART OPD")                   
@@ -1086,7 +1116,3 @@ if __name__ == "__main__":
     root.resizable(True, True)    
     root.after(1000, SmartcartdataReader)   # 1 secord go to Function ReadSmartCard
     root.mainloop()
-
-
-
-
