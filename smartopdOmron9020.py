@@ -147,22 +147,22 @@ def SendToserver():
     global  data_height
     global  data_bmi 
 
-    device2 = 'device-2'     #   ชื่อ Device
+    deviceomron = 'Device-Omron9020'     #   ชื่อ Device
     
     print("firstname ={0}, lastname = {1}".format(firstname,lastname))
 
     while(True):
       
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        #ipaddress = ''
-        #ipaddress = ReadIPserver()
-        host = '192.168.137.1'
-        port = 12345                        #port to connect
+        ipaddress = ''
+        ipaddress = ReadIPserver()          #get ip from file ini
+        host = ipaddress
+        port = 12345                      
 
         try:
              
                 s.connect((host, port))             
-                #print(s.recv(4096))         # message from server  
+                print(s.recv(4096))         # message from server  
 
         except socket.error as ex_msg:
              
@@ -187,27 +187,28 @@ def SendToserver():
                         root.after(1000,SmartcartdataReader)   # 1 Secord to read bp 320
                         root.mainloop()     
 
-        MSH = "MSH|^~\&|OMROM9020|MEDITOP|HIS|BMS-HOSxP|20200908095523||ORU^R01|5|P|2.3"
-        PID = "PID|1|||1361200124401"
-        PV1 = "PV1||O||||||||||||||||| "
-        OBR = "OBR|1|||||20200908095523||||||||20200908095523"
-        OBX1 = "OBX|1|ST|WEIGHT||80.6|KG.|||||F|||20200908095523|56CE01090"
-        OBX2 = "OBX|2|ST|HEIGHT||181.3|CM.|||||F|||20200908095523|56CE01090 "
-        OBX3 = "OBX|3|ST|BMI||21.2| Kg/m2|||||F|||20200908095523|56CE01090"
-        OBX4 = "OBX|4|ST|SYSTOLIC||137.0|mmHg|||||F|||20200908095523|F12AD056"
-        OBX5 = "OBX|5|ST|DIASTOLIC||87.0|mmHg|||||F|||20200908095523|F12AD056"
-        OBX6 = "OBX|6|ST|PR||62.0|RM|||||F|||20200908095523||F12AD056 "
-
-        dataformatHL7 = MSH +"\n"+ PID +"\n"+ PV1 +"\n"+ OBR +"\n"+ OBX1 +"\n"+ OBX2 +"\n"+ OBX3 +"\n"+ OBX4 +"\n"+ OBX5 +"\n"+ OBX6
-        print(dataformatHL7)
-
         now = datetime.now()
-        #dt = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        dt = now.strftime("%Y-%m-%d %H:%M:%S") 
+        dt = now.strftime("%Y%m%d%H%M%S") 
 
-        msg_data = "|{0}|{1}|{2}|{3}|{4}|{5}|{6}|{7}|{8}|{9}|{10}|{11}|{12}|{13}".format(device2,cid,dt,firstname_en,lastname_en,dateOfbrith,gender,age,data_sys,data_dia,data_pr,data_width,data_height,data_bmi)
-        print(msg_data)
+        MSH = "MSH|^~\&|"+ deviceomron +"|MEDITOP|HIS|BMS-HOSxP|"+dt+"||ORU^R01|5|P|2.3"
+        PID = "PID|1|||"+ cid +" "; 
+        PV1 = "PV1||O|||||||||||||||||"
+        OBR = "OBR|1|||||"+dt+"||||||||"+dt+""
+        OBX1 = "OBX|1|ST|WEIGHT||80.6|KG.|||||F|||"+dt+"|56CE01090"
+        OBX2 = "OBX|2|ST|HEIGHT||181.3|CM.|||||F|||"+dt+"|56CE01090 "
+        OBX3 = "OBX|3|ST|BMI||21.2| Kg/m2|||||F|||"+dt+"|56CE01090"
+        OBX4 = "OBX|4|ST|SYSTOLIC||"+data_sys+"|mmHg|||||F|||"+dt+"|BP-9020"
+        OBX5 = "OBX|5|ST|DIASTOLIC||"+data_dia+"|mmHg|||||F|||"+dt+"|BP-9020"
+        OBX6 = "OBX|6|ST|PR||"+data_pr+"|RM|||||F|||"+dt+"||BP-9020"
+
+        dataformatHL7 = cid +"\n" +  MSH +"\n"+ PID +"\n"+ PV1 +"\n"+ OBR +"\n"+ OBX1 +"\n"+ OBX2 +"\n"+ OBX3 +"\n"+ OBX4 +"\n"+ OBX5 +"\n"+ OBX6
+        print(dataformatHL7)
+     
+        #**********For send to server format textfile***************
+        #msg_data = "|{0}|{1}|{2}|{3}|{4}|{5}|{6}|{7}|{8}|{9}|{10}|{11}|{12}|{13}".format(deviceomron,cid,dt,firstname_en,lastname_en,dateOfbrith,gender,age,data_sys,data_dia,data_pr,data_width,data_height,data_bmi)
+        #print(msg_data)
         #byte_encode = msg_data.encode('utf-8')
+
         byte_encode = dataformatHL7.encode('utf-8')   
         print("Sending To Server From Device 1 : ", dataformatHL7)
 
@@ -861,9 +862,9 @@ def GetdataOmron9020():
             while True :
                     time.sleep(6)
                     
-                    byteesToRead = b'\x02h\x19\nZK1806\x1b744\x1b227\x1b\x14\x03\x02h\x19\nZK1806\x1b744\x1b227\x1b\x14\x03\x19\nZK1806\x1b744\x1b227\x1b\x14\x03'
+                    #byteesToRead = b'\x02h\x19\nZK1806\x1b744\x1b227\x1b\x14\x03\x02h\x19\nZK1806\x1b744\x1b227\x1b\x14\x03\x19\nZK1806\x1b744\x1b227\x1b\x14\x03'
                     
-                    #byteesToRead = ser.read(ser.inWaiting()) 
+                    byteesToRead = ser.read(ser.inWaiting()) 
                     print(byteesToRead)
                     print(str(byteesToRead))
                     
@@ -874,7 +875,7 @@ def GetdataOmron9020():
                         buff = []
                     
                         buff = Savebuffer(byteesToRead)
-                        buff = [98, 112, 45, 49, 50, 51, 52, 53, 54, 55, 56, 57, 49, 50, 51, 52, 53, 54, 55, 56, 57, 49, 48, 45, 50, 48, 49, 57, 47, 48, 54, 47, 49, 48, 45, 49, 49, 42, 51, 56, 45, 49, 49, 53, 45, 48, 55, 51, 45, 49, 49, 52, 45, 32, 57, 48, 45, 32]
+                        #buff = [98, 112, 45, 49, 50, 51, 52, 53, 54, 55, 56, 57, 49, 50, 51, 52, 53, 54, 55, 56, 57, 49, 48, 45, 50, 48, 49, 57, 47, 48, 54, 47, 49, 48, 45, 49, 49, 42, 51, 56, 45, 49, 49, 53, 45, 48, 55, 51, 45, 49, 49, 52, 45, 32, 57, 48, 45, 32]
                         print(buff)
                         
                         if len(byteesToRead) > 58:
@@ -907,11 +908,7 @@ def GetdataOmron9020():
                                 #sent to server
                                 root.after(1000,SendToserver)
                                 #ser.close()
-                                root.mainloop()
-
-                                #root.after(5000,Imgbsm370)        # use 4 secord to read measument read scalar inbdoy370
-                                #ser.close()
-                                #root.mainloop()            
+                                root.mainloop()          
                             
                     else:
                         
